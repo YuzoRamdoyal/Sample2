@@ -1,0 +1,73 @@
+-- Create the main table
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100),
+    gender VARCHAR(10),
+    card_number VARCHAR(16),
+    balance DECIMAL(10, 2),
+    credit_limit DECIMAL(10, 2),
+    card_currency VARCHAR(10),
+    date_inserted DATE,
+    date_modified DATE,
+    active BOOLEAN
+);
+
+-- Create the staging table to store the new records
+CREATE TABLE customers_staging (
+    customer_id INT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100),
+    gender VARCHAR(10),
+    card_number VARCHAR(16),
+    balance DECIMAL(10, 2),
+    credit_limit DECIMAL(10, 2),
+    card_currency VARCHAR(10)
+);
+
+-- Insert new records into the staging table
+INSERT INTO customers_staging (customer_id, first_name, last_name, email, gender, card_number, balance, credit_limit, card_currency)
+VALUES
+    (1, 'John', 'Doe', 'john.doe@example.com', 'Male', '1234567890123456', 100.00, 1000.00, 'USD'),
+    (2, 'Jane', 'Smith', 'jane.smith@example.com', 'Female', '9876543210987654', 200.00, 2000.00, 'EUR'),
+    -- Add more new records as needed
+    ;
+
+-- Update existing records in the main table
+UPDATE customers
+SET date_modified = CURRENT_DATE, active = FALSE
+WHERE customer_id IN (
+    SELECT customer_id
+    FROM customers
+    JOIN customers_staging ON customers.customer_id = customers_staging.customer_id
+    WHERE customers.first_name <> customers_staging.first_name
+        OR customers.last_name <> customers_staging.last_name
+        OR customers.email <> customers_staging.email
+        OR customers.gender <> customers_staging.gender
+        OR customers.card_number <> customers_staging.card_number
+        OR customers.balance <> customers_staging.balance
+        OR customers.credit_limit <> customers_staging.credit_limit
+        OR customers.card_currency <> customers_staging.card_currency
+);
+
+-- Insert new records from the staging table into the main table
+INSERT INTO customers (customer_id, first_name, last_name, email, gender, card_number, balance, credit_limit, card_currency, date_inserted, date_modified, active)
+SELECT
+    customer_id,
+    first_name,
+    last_name,
+    email,
+    gender,
+    card_number,
+    balance,
+    credit_limit,
+    card_currency,
+    CURRENT_DATE,
+    NULL,
+    TRUE
+FROM customers_staging;
+
+-- Clean up the staging table
+DROP TABLE customers_staging;

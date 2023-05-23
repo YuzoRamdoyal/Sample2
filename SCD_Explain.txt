@@ -1,0 +1,13 @@
+The code begins by creating the main table customers with all the columns mentioned in the question. However, instead of using start_date, end_date, and is_current, it uses date_inserted, date_modified, and active columns to track the historical changes.
+
+Next, the code creates a staging table customers_staging with the same columns as the main table. This staging table will hold the new records that need to be inserted into the main table.
+
+The INSERT INTO customers_staging statement is used to insert the new records into the staging table. You can add more INSERT statements as needed to insert additional new records.
+
+After the new records are inserted into the staging table, the code updates the existing records in the main table that have changed. The UPDATE statement compares the data in the main table (customers) with the data in the staging table (customers_staging) using a JOIN condition on the customer_id column. If any of the columns (first_name, last_name, email, etc.) in the main table are different from the corresponding columns in the staging table, the record in the main table is updated. The date_modified column is set to the current date, and the active column is set to FALSE to indicate that it is no longer the current version of the record.
+
+Finally, the code inserts the new records from the staging table into the main table. The INSERT INTO customers statement selects the data from the staging table and inserts it into the main table. The date_inserted column is set to the current date to indicate when the record was inserted. The date_modified column is set to NULL because this is the initial version of the record. The active column is set to TRUE to indicate that it is the current version of the record.
+
+The staging table customers_staging is then dropped as it is no longer needed.
+
+This implementation of SCD2 allows you to track the changes in the main table by using the date_inserted, date_modified, and active columns. New records are inserted with the current date, and updates to existing records are tracked by setting the date_modified and active columns accordingly.
